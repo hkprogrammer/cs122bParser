@@ -160,7 +160,8 @@ public class loadXML {
             ps.setString(1, genre_in_movies.get(1));
             ps.setString(2, genre_in_movies.get(0));
 
-            ps.executeQuery();
+            ResultSet rs1 = ps.executeQuery();
+            rs1.close();
             ps.close();
             String callQuery = "SELECT @status as st;";
             PreparedStatement ps1 = conn.prepareStatement(callQuery);
@@ -200,8 +201,6 @@ public class loadXML {
         System.out.println("\n\n##############################\nInserting Actors into database");
         int totalInserted = 0;
         int totalProcessed = 0;
-
-
 
 
         //find max for once and keep incrementing afterwards:
@@ -273,7 +272,6 @@ public class loadXML {
 
         for(int i = 0;i<casts.size();i++){
             List<String> col = casts.get(i);
-
             //Since the implementation is up to us, I will ignore the casts who is not already in the database;
             totalProcessed++;
             if (col == null) {
@@ -288,18 +286,28 @@ public class loadXML {
                 System.out.println("ERROR: Record is blank in one of its fields: " + col);
                 continue;
             }
-            String query = "CALL add_cast(?, ?, @newStatus);";
+
+            System.out.println("before call");
+            String query = "CALL add_cast(?, ?, @status);";
+
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, col.get(0));
             ps.setString(2, col.get(1));
-            ps.executeQuery();
-            ps.close();
 
-            String call = "SELECT @newStatus as st;";
+            System.out.println("after call");
+            ResultSet rs1 = ps.executeQuery();
+            rs1.close();
+            ps.close();
+            System.out.println("after call");
+            String call = "SELECT @status as st;";
+
             PreparedStatement ps1 = conn.prepareStatement(call);
             ResultSet rs = ps1.executeQuery();
-            while(rs.next()){
+            int iter = 0;
+
+            while(rs.next() && iter < 5){
                 String status = rs.getString("st");
+                iter++;
                 if(status.length() > 0){
                     //success found
                     totalInserted++;
@@ -331,7 +339,6 @@ public class loadXML {
         System.out.println("Total films: " + l.size());
         System.out.println("Total genres: " + g.size());
 
-
         insertMovies(conn, l);
         insertGenres(conn, g);
 
@@ -359,7 +366,6 @@ public class loadXML {
 
 
     public void runProgram() throws Exception{
-
         // Incorporate mySQL driver
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection conn = DriverManager.getConnection("jdbc:" + Parameters.dbtype + ":///" + Parameters.dbname + "?autoReconnect=true&useSSL=false",
@@ -373,18 +379,20 @@ public class loadXML {
              *
              *
              */
-            this.handle_movies_and_genres(conn);
-            this.handle_actors(conn);
+//            this.handle_movies_and_genres(conn);
+//            this.handle_actors(conn);
             this.handle_casts(conn);
 
 
 //            JsonObject json = new JsonObject();
         } catch (Exception e) {
-
             // Write error message JSON object to output
 //            System.out.println(e.getMessage());
         }
-        conn.close();
+        finally {
+            conn.close();
+        }
+//        conn.close();
 
     }
     public static void main(String[] args) {
