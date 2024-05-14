@@ -272,6 +272,8 @@ public class loadXML {
 
         int totalInserted = 0;
         int totalProcessed = 0;
+
+
         for(int i = 0;i<casts.size();i++){
             List<String> col = casts.get(i);
 
