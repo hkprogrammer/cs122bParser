@@ -294,33 +294,29 @@ public class loadXML {
             ps.setString(1, col.get(0));
             ps.setString(2, col.get(1));
 
-            System.out.println("after call");
             ResultSet rs1 = ps.executeQuery();
             rs1.close();
             ps.close();
-            System.out.println("after call");
-            String call = "SELECT @status as st;";
 
-            PreparedStatement ps1 = conn.prepareStatement(call);
-            ResultSet rs = ps1.executeQuery();
-            int iter = 0;
-
-            while(rs.next() && iter < 5){
-                String status = rs.getString("st");
-                iter++;
-                if(status.length() > 0){
-                    //success found
-                    totalInserted++;
-                    if(totalInserted % 500 == 0){
-                        System.out.println("SUCCESS: Inserted " + totalInserted + " casts into the database");
-                    }
-                }
-                else{
-                    System.out.println("ERROR: Error while inserting " + col + " into the database, likely due to FK issue");
-                }
+//            int iter = 0;
+            if(i%500 == 0){
+                System.out.println("Attempted Inserted " + totalInserted + " casts into database");
             }
-            rs.close();
-            ps1.close();
+//            while(rs!= null && rs.next() && iter < 5){
+//                String status = rs.getString("st");
+//                iter++;
+//                if(status.length() > 0){
+//                    //success found
+//                    totalInserted++;
+//                    if(totalInserted % 500 == 0){
+//                        System.out.println("SUCCESS: Inserted " + totalInserted + " casts into the database");
+//                    }
+//                }
+//                else{
+//                    System.out.println("ERROR: Error while inserting " + col + " into the database, likely due to FK issue");
+//                }
+//            }
+
         }
 
         System.out.println("FINISHED: Total Inserted " + totalInserted + " out of " + totalProcessed);
