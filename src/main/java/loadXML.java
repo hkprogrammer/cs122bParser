@@ -266,19 +266,24 @@ public class loadXML {
     }
 
     public int insertCasts(Connection conn, List<List<String>> casts) throws SQLException{
-
-
         System.out.println("\n\n##############################\nInserting Casts into database");
 
         int totalInserted = 0;
         int totalProcessed = 0;
-
 
         for(int i = 0;i<casts.size();i++){
             List<String> col = casts.get(i);
 
             //Since the implementation is up to us, I will ignore the casts who is not already in the database;
             totalProcessed++;
+            if (col == null) {
+                System.out.println("ERROR: col is null");
+                continue;
+            }
+            if(col.get(0) == null || col.get(1) == null){
+                System.out.println("ERROR col is null");
+                continue;
+            }
             if(col.get(0).isBlank() || col.get(1).isBlank()){
                 System.out.println("ERROR: Record is blank in one of its fields: " + col);
                 continue;
@@ -317,7 +322,7 @@ public class loadXML {
 
 
     public void handle_movies_and_genres(Connection conn) throws SQLException{
-        loadFilms spe = new loadFilms("test.xml");
+        loadFilms spe = new loadFilms("mains243.xml");
         spe.runProgram();
 
         List<film> unique = spe.processUniqueFilms();
