@@ -324,7 +324,6 @@ public class loadXML {
         System.out.println("Total films: " + l.size());
         System.out.println("Total genres: " + g.size());
 
-
         insertMovies(conn, l);
         insertGenres(conn, g);
 
@@ -352,7 +351,6 @@ public class loadXML {
 
 
     public void runProgram() throws Exception{
-
         // Incorporate mySQL driver
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection conn = DriverManager.getConnection("jdbc:" + Parameters.dbtype + ":///" + Parameters.dbname + "?autoReconnect=true&useSSL=false",
@@ -366,8 +364,8 @@ public class loadXML {
              *
              *
              */
-            this.handle_movies_and_genres(conn);
-            this.handle_actors(conn);
+//            this.handle_movies_and_genres(conn);
+//            this.handle_actors(conn);
             this.handle_casts(conn);
 
 
