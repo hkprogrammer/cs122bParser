@@ -160,7 +160,8 @@ public class loadXML {
             ps.setString(1, genre_in_movies.get(1));
             ps.setString(2, genre_in_movies.get(0));
 
-            ps.executeQuery();
+            ResultSet rs1 = ps.executeQuery();
+            rs1.close();
             ps.close();
             String callQuery = "SELECT @status as st;";
             PreparedStatement ps1 = conn.prepareStatement(callQuery);
@@ -200,8 +201,6 @@ public class loadXML {
         System.out.println("\n\n##############################\nInserting Actors into database");
         int totalInserted = 0;
         int totalProcessed = 0;
-
-
 
 
         //find max for once and keep incrementing afterwards:
@@ -274,25 +273,31 @@ public class loadXML {
         int totalProcessed = 0;
         for(int i = 0;i<casts.size();i++){
             List<String> col = casts.get(i);
-
             //Since the implementation is up to us, I will ignore the casts who is not already in the database;
             totalProcessed++;
             if(col.get(0).isBlank() || col.get(1).isBlank()){
                 System.out.println("ERROR: Record is blank in one of its fields: " + col);
                 continue;
             }
-            String query = "CALL add_cast(?, ?, @status);\n";
+            System.out.println("before call");
+            String query = "CALL add_cast(?, ?, @status);";
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, col.get(0));
             ps.setString(2, col.get(1));
-            ps.executeQuery();
-            ps.close();
 
+            System.out.println("after call");
+            ResultSet rs1 = ps.executeQuery();
+            rs1.close();
+            ps.close();
+            System.out.println("after call");
             String call = "SELECT @status as st;";
             PreparedStatement ps1 = conn.prepareStatement(call);
             ResultSet rs = ps1.executeQuery();
-            while(rs.next()){
+            int iter = 0;
+
+            while(rs.next() && iter < 5){
                 String status = rs.getString("st");
+                iter++;
                 if(status.length() > 0){
                     //success found
                     totalInserted++;
@@ -371,11 +376,13 @@ public class loadXML {
 
 //            JsonObject json = new JsonObject();
         } catch (Exception e) {
-
             // Write error message JSON object to output
 //            System.out.println(e.getMessage());
         }
-        conn.close();
+        finally {
+            conn.close();
+        }
+//        conn.close();
 
     }
     public static void main(String[] args) {
