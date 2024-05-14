@@ -367,8 +367,8 @@ public class loadXML {
              *
              *
              */
-            //this.handle_movies_and_genres(conn);
-            //this.handle_actors(conn);
+            this.handle_movies_and_genres(conn);
+            this.handle_actors(conn);
             this.handle_casts(conn);
 
 
