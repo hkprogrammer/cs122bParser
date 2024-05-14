@@ -315,7 +315,7 @@ public class loadXML {
 
 
     public void handle_movies_and_genres(Connection conn) throws SQLException{
-        loadFilms spe = new loadFilms("test.xml");
+        loadFilms spe = new loadFilms("mains243.xml");
         spe.runProgram();
 
         List<film> unique = spe.processUniqueFilms();
