@@ -15,7 +15,7 @@ public class film {
         this.director = director;
         this.title = title;
         this.year = year;
-        this.casts = new ArrayList<cast>();
+        this.casts = new ArrayList<>();
         this.id = id;
         this.categroy = new HashSet<>();
     }
@@ -23,7 +23,7 @@ public class film {
         this.director = null;
         this.title = null;
         this.year = null;
-        this.casts = new ArrayList<cast>();
+        this.casts = new ArrayList<>();
         this.id = "";
         this.categroy = new HashSet<>();
     }
@@ -72,10 +72,10 @@ public class film {
         System.out.println("Director: " + director);
         System.out.println("Title: " + title);
         System.out.println("Year: " + year);
-        for(int i = 0;i<this.casts.size();i++){
-            cast c = this.casts.get(i);
-            c.print();
-        }
+//        for(int i = 0;i<this.casts.size();i++){
+//            cast c = this.casts.get(i);
+//            c.print();
+//        }
     }
 
 

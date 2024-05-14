@@ -14,6 +14,48 @@ import java.sql.Statement;
 import java.util.List;
 
 public class loadXML {
+
+    String max_increment(String str){
+        //parse the string:
+        //find the right most integer:
+        if(str.equals("")) {
+            return "1";
+        }
+        int left = -1;
+        int right = 0;
+        for(int i = 0;i<str.length();i++){
+//            System.out.println(str.charAt(i));
+            if(Character.isDigit(str.charAt(i)) && left == -1){
+//                System.out.println(str.charAt(i));
+//                System.out.println("left found!");
+//                System.out.println(i);
+                left = i;
+                right = -1;
+            }
+            if(Character.isAlphabetic(str.charAt(i)) && right == -1){
+                right = i;
+            }
+        }
+        //increment by 1:
+//        System.out.println(left);
+//        System.out.println(right);
+        if(right == -1 && left >= 0){
+            right = str.length()-1;
+        }
+        if(left == -1 || right == -1){
+            return "0";
+        }
+
+        String val = str.substring(left,right+1);
+        int newVal = Integer.parseInt(val)+1;
+        String s_val = String.valueOf(newVal);
+        String newMax = str.substring(0, left) + s_val + str.substring(right+1, str.length());
+        return newMax;
+
+    }
+
+
+
     public int insertMovies(Connection conn, List<List<String>> listOfFilms) throws SQLException {
 
         int count = 0;
@@ -21,7 +63,7 @@ public class loadXML {
         int totalProceesed =0;
         int totalInserted = 0;
 
-        System.out.println("##############################\nInserting Movies into database");
+        System.out.println("\n\n##############################\nInserting Movies into database");
 
         for(int i = 0;i<listOfFilms.size();i++){
 //            String insertLine = "INSERT INTO movies(id, title, year, xmlLoader.director) VALUES(?, ?, ?, ?);";
@@ -93,12 +135,14 @@ public class loadXML {
 
     public int insertGenres(Connection conn, List<List<String>> genres) throws SQLException{
 
-        System.out.println("##############################\nInserting Genres into database");
+        System.out.println("\n\n##############################\nInserting Genres into database");
         int totalInserted = 0;
         int totalProcessed = 0;
         for(int i = 0;i<genres.size();i++){
             // [1] is genreName, [0] is movie_id
             List<String> genre_in_movies = genres.get(i);
+            totalProcessed++;
+
             //use the stored procedure for this:
             /**
              *
@@ -106,8 +150,11 @@ public class loadXML {
              * SELECT @status;
              */
 
+            if(genre_in_movies.get(0).isBlank() || genre_in_movies.get(1).isBlank()){
+                System.out.println("ERROR: Record is blank in one of its fields: " + genre_in_movies);
+                continue;
+            }
 //            System.out.println(genre_in_movies);
-            totalProcessed++;
             String query = "CALL add_genre(?, ?, @status);";
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, genre_in_movies.get(1));
@@ -139,12 +186,168 @@ public class loadXML {
                     }
                 }
             }
+            rs.close();
             ps1.close();
 //            ps.close();
         }
 
         System.out.println("FINISHED: Total Successed Genres_in_movies: " + totalInserted + " out of " + totalProcessed);
         return 1;
+    }
+
+    public int insertActors(Connection conn, List<List<String>> actors) throws SQLException{
+
+        System.out.println("\n\n##############################\nInserting Actors into database");
+        int totalInserted = 0;
+        int totalProcessed = 0;
+
+
+
+
+        //find max for once and keep incrementing afterwards:
+        PreparedStatement findmax = conn.prepareStatement("SELECT DISTINCT max(id) as id FROM stars s LIMIT 1;");
+        ResultSet rs = findmax.executeQuery();
+        String maxId = "1000";
+        while(rs.next()){
+            maxId = rs.getString("id");
+        }
+        rs.close();
+        findmax.close();
+        //max_increment
+        if(maxId ==  null || maxId.length() == 0){
+            maxId = "0";
+        }
+        maxId = max_increment(maxId);
+
+
+        for(int i = 0;i<actors.size();i++) {
+            totalProcessed++;
+            List<String> row = actors.get(i);
+            String name = row.get(0);
+            String year = row.get(1);
+            if(name == null || year == null){
+                System.out.println("ERROR: row is null?? " + row);
+                continue;
+            }
+            if (name.isBlank()) {
+                System.out.println("ERROR: Name is blank for row: " + row);
+                continue;
+            }
+            //verify year:
+            int y = -1;
+            if(year.length() > 0){
+                try{
+                    y = Integer.parseInt(year);
+                }
+                catch(Exception e){
+//                    System.out.println("ERROR: dob is not an integer")
+                }
+            }
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO stars (id ,name, birthYear) VALUES(?, ?, ?);");
+            ps.setString(1, maxId);
+            ps.setString(2, name);
+            ps.setInt(3, y);
+            maxId = max_increment(maxId);
+            int a = ps.executeUpdate();
+            if(a > 0){
+                totalInserted++;
+                if(totalInserted % 500 == 0){
+                    System.out.println("SUCCESS: Inserted " + totalInserted + " actors into the database");
+                }
+            }
+            else{
+                System.out.println("ERROR: Row " + row + " not inserted");
+            }
+            ps.close();
+        }
+
+        System.out.println("FINISHED: Total Inserted: " + totalInserted + " out of " + totalProcessed);
+        return 1;
+    }
+
+    public int insertCasts(Connection conn, List<List<String>> casts) throws SQLException{
+
+
+        System.out.println("\n\n##############################\nInserting Casts into database");
+
+        int totalInserted = 0;
+        int totalProcessed = 0;
+        for(int i = 0;i<casts.size();i++){
+            List<String> col = casts.get(i);
+
+            //Since the implementation is up to us, I will ignore the casts who is not already in the database;
+            totalProcessed++;
+            if(col.get(0).isBlank() || col.get(1).isBlank()){
+                System.out.println("ERROR: Record is blank in one of its fields: " + col);
+                continue;
+            }
+            String query = "CALL add_cast(?, ?, @status);\n";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setString(1, col.get(0));
+            ps.setString(2, col.get(1));
+            ps.executeQuery();
+            ps.close();
+
+            String call = "SELECT @status as st;";
+            PreparedStatement ps1 = conn.prepareStatement(call);
+            ResultSet rs = ps1.executeQuery();
+            while(rs.next()){
+                String status = rs.getString("st");
+                if(status.length() > 0){
+                    //success found
+                    totalInserted++;
+                    if(totalInserted % 500 == 0){
+                        System.out.println("SUCCESS: Inserted " + totalInserted + " casts into the database");
+                    }
+                }
+                else{
+                    System.out.println("ERROR: Error while inserting " + col + " into the database, likely due to FK issue");
+                }
+            }
+            rs.close();
+            ps1.close();
+        }
+
+        System.out.println("FINISHED: Total Inserted " + totalInserted + " out of " + totalProcessed);
+        return 1;
+    }
+
+
+
+    public void handle_movies_and_genres(Connection conn) throws SQLException{
+        loadFilms spe = new loadFilms("test.xml");
+        spe.runProgram();
+
+        List<film> unique = spe.processUniqueFilms();
+        List<List<String>> l = spe.exportMovies(unique);
+        List<List<String>> g = spe.exportGenres(unique);
+        System.out.println("Total films: " + l.size());
+        System.out.println("Total genres: " + g.size());
+
+
+        insertMovies(conn, l);
+        insertGenres(conn, g);
+
+        //this should self destruct and clear up heap memory;
+    }
+
+    public void handle_actors(Connection conn) throws SQLException{
+        loadActors spe = new loadActors("actors63.xml");
+        spe.runProgram();
+        List<List<String>> a = spe.exportActors();
+        System.out.println("Total actors: " + a.size());
+        insertActors(conn, a);
+
+
+        //this should self destruct too;
+    }
+
+    public void handle_casts(Connection conn) throws SQLException{
+        loadCasts spe = new loadCasts("casts124.xml");
+        spe.runProgram();
+        List<List<String>> a = spe.exportCasts();
+        System.out.println("Total casts: " + a.size());
+        insertCasts(conn, a);
     }
 
 
@@ -155,23 +358,24 @@ public class loadXML {
         Connection conn = DriverManager.getConnection("jdbc:" + Parameters.dbtype + ":///" + Parameters.dbname + "?autoReconnect=true&useSSL=false",
                 Parameters.username, Parameters.password);
         try {
-            loadFilms spe = new loadFilms("test.xml");
-            spe.runProgram();
 
-            List<film> unique = spe.processUniqueFilms();
-            List<List<String>> l = spe.exportMovies(unique);
-            List<List<String>> g = spe.exportGenres(unique);
-            System.out.println("Total films: " + l.size());
-            System.out.println("Total genres: " + g.size());
+            /**
+             *
+             *
+             * HANDLERS
+             *
+             *
+             */
+            this.handle_movies_and_genres(conn);
+            this.handle_actors(conn);
+            this.handle_casts(conn);
 
-            insertMovies(conn, l);
-            insertGenres(conn, g);
 
 //            JsonObject json = new JsonObject();
         } catch (Exception e) {
 
             // Write error message JSON object to output
-            System.out.println(e.getMessage());
+//            System.out.println(e.getMessage());
         }
         conn.close();
 
