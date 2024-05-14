@@ -288,14 +288,14 @@ public class loadXML {
                 System.out.println("ERROR: Record is blank in one of its fields: " + col);
                 continue;
             }
-            String query = "CALL add_cast(?, ?, @status);";
+            String query = "CALL add_cast(?, ?, @newStatus);";
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, col.get(0));
             ps.setString(2, col.get(1));
             ps.executeQuery();
             ps.close();
 
-            String call = "SELECT @status as st;";
+            String call = "SELECT @newStatus as st;";
             PreparedStatement ps1 = conn.prepareStatement(call);
             ResultSet rs = ps1.executeQuery();
             while(rs.next()){
