@@ -265,22 +265,31 @@ public class loadXML {
     }
 
     public int insertCasts(Connection conn, List<List<String>> casts) throws SQLException{
-
-
         System.out.println("\n\n##############################\nInserting Casts into database");
 
         int totalInserted = 0;
         int totalProcessed = 0;
+
         for(int i = 0;i<casts.size();i++){
             List<String> col = casts.get(i);
             //Since the implementation is up to us, I will ignore the casts who is not already in the database;
             totalProcessed++;
+            if (col == null) {
+                System.out.println("ERROR: col is null");
+                continue;
+            }
+            if(col.get(0) == null || col.get(1) == null){
+                System.out.println("ERROR col is null");
+                continue;
+            }
             if(col.get(0).isBlank() || col.get(1).isBlank()){
                 System.out.println("ERROR: Record is blank in one of its fields: " + col);
                 continue;
             }
+
             System.out.println("before call");
             String query = "CALL add_cast(?, ?, @status);";
+
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, col.get(0));
             ps.setString(2, col.get(1));
@@ -291,6 +300,7 @@ public class loadXML {
             ps.close();
             System.out.println("after call");
             String call = "SELECT @status as st;";
+
             PreparedStatement ps1 = conn.prepareStatement(call);
             ResultSet rs = ps1.executeQuery();
             int iter = 0;
