@@ -279,22 +279,20 @@ public class loadXML {
                 System.out.println("ERROR: Record is blank in one of its fields: " + col);
                 continue;
             }
-            System.out.println("before call");
+            //System.out.println("before call");
             String query = "CALL add_cast(?, ?, @status);";
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, col.get(0));
             ps.setString(2, col.get(1));
 
-            System.out.println("after call");
             ResultSet rs1 = ps.executeQuery();
             rs1.close();
             ps.close();
-            System.out.println("after call");
+
             String call = "SELECT @status as st;";
             PreparedStatement ps1 = conn.prepareStatement(call);
             ResultSet rs = ps1.executeQuery();
             int iter = 0;
-
             while(rs.next() && iter < 5){
                 String status = rs.getString("st");
                 iter++;
@@ -369,8 +367,8 @@ public class loadXML {
              *
              *
              */
-//            this.handle_movies_and_genres(conn);
-//            this.handle_actors(conn);
+            //this.handle_movies_and_genres(conn);
+            //this.handle_actors(conn);
             this.handle_casts(conn);
 
 
